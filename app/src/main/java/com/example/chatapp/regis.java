@@ -13,6 +13,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 
@@ -21,6 +22,7 @@ public class regis extends AppCompatActivity {
     FirebaseAuth firebaseAuth;
     FirebaseDatabase firebaseDatabase;
     FirebaseStorage firebaseStorage;
+    DatabaseReference reference;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,6 +48,10 @@ public class regis extends AppCompatActivity {
         });
 
         firebaseAuth = FirebaseAuth.getInstance();
+        firebaseDatabase = FirebaseDatabase.getInstance();
+        firebaseStorage = FirebaseStorage.getInstance();
+        reference = firebaseDatabase.getReference("users").
+                child(firebaseAuth.getCurrentUser().getUid());
     }
 
     private void reg(){
@@ -55,12 +61,33 @@ public class regis extends AppCompatActivity {
             public void onComplete(@NonNull Task<AuthResult> task) {
                 if(task.isSuccessful()){
                     Toast.makeText(regis.this, "new user have been reg", Toast.LENGTH_SHORT).show();
-                    startActivity(new Intent(regis.this , chatActivity.class));
+                    uploadAllTheDataToCloud();
                 }else{
                     Toast.makeText(regis.this , "error" , Toast.LENGTH_SHORT).show();
                 }
             }
         });
+    }
+
+    private void uploadAllTheDataToCloud(){
+        firebaseAuth.signInWithEmailAndPassword(email , password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+            @Override
+            public void onComplete(@NonNull Task<AuthResult> task) {
+                if(task.isSuccessful()){
+                    uploadUsersData temp = new uploadUsersData(email);
+                    reference.setValue(temp).addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if(task.isSuccessful()){
+                                Toast.makeText(regis.this, "users email is now his/her id also", Toast.LENGTH_SHORT).show();
+                                startActivity(new Intent(regis.this , chatActivity.class));
+                            }
+                        }
+                    });
+                }
+            }
+        });
+
     }
 
     private void signUpWithGoogle(){

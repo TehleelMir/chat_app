@@ -51,6 +51,11 @@ public class StartActivity extends AppCompatActivity {
 
         firebaseAuth = FirebaseAuth.getInstance();
 
+        if(firebaseAuth.getCurrentUser() != null){
+            startActivity(new Intent(this , chatActivity.class));
+            finish();
+        }
+
     }
 
     private void login(){
